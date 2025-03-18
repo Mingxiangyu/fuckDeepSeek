@@ -6,8 +6,13 @@ import MessageBubble, { MessageType } from "./MessageBubble";
 import { WhaleIcon } from "@/components/WhaleIcon";
 import { v4 as uuidv4 } from "uuid";
 
-export default function ChatContainer() {
-  const [messages, setMessages] = useState<MessageType[]>([
+interface Props {
+  className?: string;
+  messages?: MessageType[];
+}
+
+export default function ChatContainer({ className, messages: externalMessages }: Props) {
+  const [messages, setMessages] = useState<MessageType[]>(externalMessages || [
     {
       id: "1",
       content: "你好！请问有什么我可以帮助你的吗？如果有具体问题或需要信息，请告诉我！",
@@ -28,6 +33,26 @@ export default function ChatContainer() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const handlePlayMessage = (event: CustomEvent) => {
+      const message = event.detail;
+      const newMessage: MessageType = {
+        id: uuidv4(),
+        content: message.content,
+        role: message.role,
+        timestamp: new Date(message.timestamp)
+      };
+      setMessages(prev => [...prev, newMessage]);
+    };
+
+    // 添加自定义事件监听器
+    document.addEventListener('playMessage', handlePlayMessage as EventListener);
+
+    return () => {
+      document.removeEventListener('playMessage', handlePlayMessage as EventListener);
+    };
+  }, []);
 
   const handleSendMessage = (content: string) => {
     // Add user message
