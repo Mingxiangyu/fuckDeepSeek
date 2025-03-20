@@ -31,6 +31,7 @@ export default function PlaybackController({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [hasAddedMessages, setHasAddedMessages] = useState(false);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -50,9 +51,21 @@ export default function PlaybackController({
     return () => clearTimeout(timer);
   }, [isPlaying, currentIndex, messages, playbackSpeed]);
 
+  // 重置消息添加状态
+  useEffect(() => {
+    if (messages.length === 0) {
+      setHasAddedMessages(false);
+    }
+  }, [messages]);
+
   const handlePlayPause = () => {
     if (!isPlaying) {
-      onAddMessage();
+      // 只有在当前没有播放且消息列表为空且尚未添加过消息时才添加新消息
+      // 这样可以避免重复添加消息和创建多个预览窗口
+      if (messages.length === 0 && !hasAddedMessages) {
+        onAddMessage();
+        setHasAddedMessages(true);
+      }
     }
     setIsPlaying(!isPlaying);
   };
